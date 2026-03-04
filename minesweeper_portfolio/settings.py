@@ -90,9 +90,11 @@ TIME_ZONE = "America/Argentina/Cordoba"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# Robust static serving on platforms where collectstatic artifacts may be unavailable
+WHITENOISE_USE_FINDERS = True
 
 # WhiteNoise storage. Manifest mode can crash with 500 if manifest is missing.
 USE_MANIFEST_STATICFILES = os.getenv("DJANGO_USE_MANIFEST_STATICFILES", "0") == "1"
