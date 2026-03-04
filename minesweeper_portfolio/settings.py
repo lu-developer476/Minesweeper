@@ -94,10 +94,16 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# WhiteNoise: compressed + hashed static for production
+# WhiteNoise storage. Manifest mode can crash with 500 if manifest is missing.
+USE_MANIFEST_STATICFILES = os.getenv("DJANGO_USE_MANIFEST_STATICFILES", "0") == "1"
+static_backend = (
+    "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    if USE_MANIFEST_STATICFILES
+    else "whitenoise.storage.CompressedStaticFilesStorage"
+)
 STORAGES = {
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": static_backend,
     }
 }
 
