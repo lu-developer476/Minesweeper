@@ -9,6 +9,8 @@ services:
       python manage.py migrate
     startCommand: gunicorn minesweeper_portfolio.wsgi:application
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.2
       - key: DJANGO_DEBUG
         value: "0"
       - key: DJANGO_ALLOWED_HOSTS
