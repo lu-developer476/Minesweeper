@@ -1,0 +1,76 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Buscaminas — Django</title>
+
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <h1>Buscaminas</h1>
+            <p class="subtitle">Python + Django · UI en escala de grises</p>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="select">
+            <label for="difficulty">Dificultad</label>
+            <select id="difficulty">
+              <option value="easy">Fácil (9×9 · 10)</option>
+              <option value="medium" selected>Media (16×16 · 40)</option>
+              <option value="hard">Difícil (16×30 · 99)</option>
+            </select>
+          </div>
+
+          <button id="btnNew" class="btn">Nueva partida</button>
+        </div>
+      </header>
+
+      <section class="panel">
+        <div class="stats">
+          <div class="stat">
+            <span class="stat-label">Minas</span>
+            <span id="mines" class="stat-value">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Banderas</span>
+            <span id="flags" class="stat-value">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Estado</span>
+            <span id="status" class="stat-value">Listo</span>
+          </div>
+          <div class="hint">Click = revelar · Click derecho = bandera</div>
+        </div>
+
+        <div class="board-wrap">
+          <div id="board" class="board" role="grid" aria-label="Tablero de buscaminas"></div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <span>Hecho para portfolio. Backend con sesión segura + API JSON.</span>
+        <span class="dot">·</span>
+        <a href="/admin/" class="link">Admin</a>
+      </footer>
+    </main>
+
+    <script>
+      // CSRF helper (Django)
+      function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+      }
+      const CSRF_TOKEN = getCookie('csrftoken');
+    </script>
+    <script src="{% static 'js/app.js' %}"></script>
+  </body>
+</html>
