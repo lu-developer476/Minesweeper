@@ -34,14 +34,24 @@ def api_new_game(request: HttpRequest) -> JsonResponse:
     except json.JSONDecodeError:
         payload = {}
 
-    difficulty = (payload.get("difficulty") or "medium").lower()
+    difficulty = (payload.get("difficulty") or "complejo").lower()
     # Classic-ish presets
     presets = {
-        "easy":   {"rows": 9,  "cols": 9,  "mines": 10},
-        "medium": {"rows": 16, "cols": 16, "mines": 40},
-        "hard":   {"rows": 16, "cols": 30, "mines": 99},
+        "inexperto": {"rows": 8,  "cols": 8,  "mines": 8},
+        "normal":    {"rows": 9,  "cols": 9,  "mines": 10},
+        "complejo":  {"rows": 16, "cols": 16, "mines": 40},
+        "dificil":   {"rows": 16, "cols": 30, "mines": 99},
+        "pesadilla": {"rows": 18, "cols": 30, "mines": 120},
     }
-    cfg = presets.get(difficulty, presets["medium"])
+    aliases = {
+        "rookie": "inexperto",
+        "easy": "normal",
+        "medium": "complejo",
+        "hard": "dificil",
+        "nightmare": "pesadilla",
+    }
+    difficulty = aliases.get(difficulty, difficulty)
+    cfg = presets.get(difficulty, presets["complejo"])
 
     state = new_game(**cfg)
     _set_state(request, state)
