@@ -13,6 +13,7 @@ let currentState = null;
 let timer = null;
 let elapsedSeconds = 0;
 let hintCell = null;
+let loadingGame = false;
 
 function setStatus(text){
   statusEl.textContent = text;
@@ -64,17 +65,76 @@ function fitBoardToViewport(state){
 }
 
 async function apiPost(url, data){
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-CSRFToken": CSRF_TOKEN,
-    },
-    body: JSON.stringify(data ?? {}),
-  });
-  const json = await res.json().catch(() => ({}));
-  if(!res.ok) throw new Error(json?.error || `Error ${res.status}`);
-  return json;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
+  try{
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": CSRF_TOKEN,
+      },
+      body: JSON.stringify(data ?? {}),
+      signal: controller.signal,
+    });
+    const json = await res.json().catch(() => ({}));
+    if(!res.ok) throw new Error(json?.error || `Error ${res.status}`);
+    return json;
+  }catch(err){
+    if(err?.name === "AbortError"){
+      throw new Error("Tiempo de espera agotado. Reintentá en unos segundos.");
+    }
+    throw err;
+  }finally{
+    clearTimeout(timeoutId);
+  }
+}
+
+function setLoadingUi(isLoading){
+  loadingGame = isLoading;
+  btnNew.disabled = isLoading;
+  difficultyEl.disabled = isLoading;
+}
+
+function neighbors(r, c, rows, cols){
+  const out = [];
+  for(let dr = -1; dr <= 1; dr += 1){
+    for(let dc = -1; dc <= 1; dc += 1){
+      if(dr === 0 && dc === 0) continue;
+      const nr = r + dr;
+      const nc = c + dc;
+      if(nr >= 0 && nr < rows && nc >= 0 && nc < cols) out.push([nr, nc]);
+    }
+  }
+  return out;
+}
+
+function getAiHint(state){
+  const safeMoves = [];
+  const grid = state.grid;
+  for(const row of grid){
+    for(const cell of row){
+      if(!cell.revealed || !cell.count) continue;
+      const around = neighbors(cell.r, cell.c, state.rows, state.cols);
+      const hidden = [];
+      let flagged = 0;
+      for(const [nr, nc] of around){
+        const n = grid[nr][nc];
+        if(n.flagged) flagged += 1;
+        if(!n.revealed && !n.flagged) hidden.push(n);
+      }
+      if(hidden.length && flagged === cell.count) safeMoves.push(...hidden);
+    }
+  }
+  if(safeMoves.length) return safeMoves[Math.floor(Math.random() * safeMoves.length)];
+
+  const fallback = [];
+  for(const row of grid){
+    for(const cell of row){
+      if(!cell.revealed && !cell.flagged) fallback.push(cell);
+    }
+  }
+  return fallback.length ? fallback[Math.floor(Math.random() * fallback.length)] : null;
 }
 
 function neighbors(r, c, rows, cols){
@@ -177,15 +237,23 @@ function render(state){
 }
 
 async function newGame(){
+  if(loadingGame) return;
   setStatus("Creando partida…");
+  setLoadingUi(true);
   elapsedSeconds = 0;
   timerEl.textContent = "00:00";
   clearInterval(timer);
   hintCell = null;
   renderBestTime();
-  const json = await apiPost("/api/new", { difficulty: difficultyEl.value });
-  render(json.state);
-  startTimer();
+  try{
+    const json = await apiPost("/api/new", { difficulty: difficultyEl.value });
+    render(json.state);
+    startTimer();
+  }catch(err){
+    setStatus(`No se pudo iniciar: ${err.message}`);
+  }finally{
+    setLoadingUi(false);
+  }
 }
 
 async function onReveal(r, c){
@@ -213,7 +281,14 @@ function toggleTheme(){
 }
 
 function askHint(){
-  if(!currentState || currentState.over) return;
+  if(!currentState){
+    setStatus("La pista IA necesita una partida activa.");
+    return;
+  }
+  if(currentState.over){
+    setStatus("La partida terminó. Iniciá una nueva para usar Pista IA.");
+    return;
+  }
   hintCell = getAiHint(currentState);
   if(hintCell){
     setStatus(`Pista IA: probá en fila ${hintCell.r + 1}, columna ${hintCell.c + 1}`);
@@ -221,10 +296,10 @@ function askHint(){
   }
 }
 
-btnNew.addEventListener("click", () => newGame());
+btnNew.addEventListener("click", () => { newGame().catch((err) => setStatus(err.message)); });
 btnHint.addEventListener("click", () => askHint());
 btnTheme.addEventListener("click", () => toggleTheme());
-difficultyEl.addEventListener("change", () => newGame());
+difficultyEl.addEventListener("change", () => { newGame().catch((err) => setStatus(err.message)); });
 
 window.addEventListener("resize", () => {
   if(currentState) fitBoardToViewport(currentState);
@@ -232,7 +307,7 @@ window.addEventListener("resize", () => {
 
 window.addEventListener("keydown", (ev) => {
   if(ev.key.toLowerCase() === "h") askHint();
-  if(ev.key.toLowerCase() === "n") newGame();
+  if(ev.key.toLowerCase() === "n") newGame().catch((err) => setStatus(err.message));
   if(ev.key.toLowerCase() === "t") toggleTheme();
 });
 
