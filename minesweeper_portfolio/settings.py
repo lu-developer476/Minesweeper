@@ -111,6 +111,10 @@ STORAGES = {
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Session backend: avoid DB dependency for gameplay state in cloud deploys.
+# Can be overridden with DJANGO_SESSION_ENGINE if needed.
+SESSION_ENGINE = os.getenv("DJANGO_SESSION_ENGINE", "django.contrib.sessions.backends.signed_cookies")
+
 # Security (reasonable defaults for portfolio deploy)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = os.getenv("DJANGO_SESSION_COOKIE_SECURE", "0") == "1"

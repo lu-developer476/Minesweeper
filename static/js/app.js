@@ -137,47 +137,6 @@ function getAiHint(state){
   return fallback.length ? fallback[Math.floor(Math.random() * fallback.length)] : null;
 }
 
-function neighbors(r, c, rows, cols){
-  const out = [];
-  for(let dr = -1; dr <= 1; dr += 1){
-    for(let dc = -1; dc <= 1; dc += 1){
-      if(dr === 0 && dc === 0) continue;
-      const nr = r + dr;
-      const nc = c + dc;
-      if(nr >= 0 && nr < rows && nc >= 0 && nc < cols) out.push([nr, nc]);
-    }
-  }
-  return out;
-}
-
-function getAiHint(state){
-  const safeMoves = [];
-  const grid = state.grid;
-  for(const row of grid){
-    for(const cell of row){
-      if(!cell.revealed || !cell.count) continue;
-      const around = neighbors(cell.r, cell.c, state.rows, state.cols);
-      const hidden = [];
-      let flagged = 0;
-      for(const [nr, nc] of around){
-        const n = grid[nr][nc];
-        if(n.flagged) flagged += 1;
-        if(!n.revealed && !n.flagged) hidden.push(n);
-      }
-      if(hidden.length && flagged === cell.count) safeMoves.push(...hidden);
-    }
-  }
-  if(safeMoves.length) return safeMoves[Math.floor(Math.random() * safeMoves.length)];
-
-  const fallback = [];
-  for(const row of grid){
-    for(const cell of row){
-      if(!cell.revealed && !cell.flagged) fallback.push(cell);
-    }
-  }
-  return fallback.length ? fallback[Math.floor(Math.random() * fallback.length)] : null;
-}
-
 function render(state){
   currentState = state;
   minesEl.textContent = state.mines;
