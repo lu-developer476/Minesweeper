@@ -9,9 +9,26 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-B0WRmrbArbuvv5mxYIeM0jqjvp0G-fpPPuTwe9HuJtw")
 DEBUG = os.getenv("DJANGO_DEBUG", "0") == "1"
 
-ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()]
+def _split_csv(value: str) -> list[str]:
+    return [item.strip() for item in value.split(",") if item.strip()]
 
-CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()]
+ALLOWED_HOSTS = _split_csv(os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1"))
+CSRF_TRUSTED_ORIGINS = _split_csv(os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", ""))
+
+# Render-safe defaults (avoid Bad Request 400 due to invalid Host header)
+render_hostname = os.getenv("RENDER_EXTERNAL_HOSTNAME", "").strip()
+if render_hostname:
+    ALLOWED_HOSTS.append(render_hostname)
+    CSRF_TRUSTED_ORIGINS.append(f"https://{render_hostname}")
+
+if not DEBUG:
+    # Works even when env vars are missing/misconfigured in Render dashboard.
+    ALLOWED_HOSTS.append(".onrender.com")
+    CSRF_TRUSTED_ORIGINS.append("https://*.onrender.com")
+
+# De-duplicate while preserving order
+ALLOWED_HOSTS = list(dict.fromkeys(ALLOWED_HOSTS))
+CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(CSRF_TRUSTED_ORIGINS))
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -73,14 +90,22 @@ TIME_ZONE = "America/Argentina/Cordoba"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# Robust static serving on platforms where collectstatic artifacts may be unavailable
+WHITENOISE_USE_FINDERS = True
 
-# WhiteNoise: compressed + hashed static for production
+# WhiteNoise storage. Manifest mode can crash with 500 if manifest is missing.
+USE_MANIFEST_STATICFILES = os.getenv("DJANGO_USE_MANIFEST_STATICFILES", "0") == "1"
+static_backend = (
+    "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    if USE_MANIFEST_STATICFILES
+    else "whitenoise.storage.CompressedStaticFilesStorage"
+)
 STORAGES = {
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": static_backend,
     }
 }
 

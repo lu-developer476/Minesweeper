@@ -4,7 +4,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Buscaminas — Django</title>
+    <title>Buscaminas</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
 
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
   </head>
@@ -14,8 +15,8 @@
         <div class="brand">
           <div class="logo" aria-hidden="true"></div>
           <div>
-            <h1>Buscaminas</h1>
-            <p class="subtitle">Python + Django · UI en escala de grises</p>
+            <h1>Minesweeper</h1>
+            
           </div>
         </div>
 
@@ -23,13 +24,17 @@
           <div class="select">
             <label for="difficulty">Dificultad</label>
             <select id="difficulty">
-              <option value="easy">Fácil (9×9 · 10)</option>
-              <option value="medium" selected>Media (16×16 · 40)</option>
-              <option value="hard">Difícil (16×30 · 99)</option>
+              <option value="inexperto">Inexperto (8×8 · 8)</option>
+              <option value="normal">Normal (9×9 · 10)</option>
+              <option value="complejo" selected>Complejo (16×16 · 40)</option>
+              <option value="dificil">Difícil (16×30 · 99)</option>
+              <option value="pesadilla">Pesadilla (18×30 · 120)</option>
             </select>
           </div>
 
           <button id="btnNew" class="btn">Nueva partida</button>
+          <button id="btnHint" class="btn btn-soft">Pista IA</button>
+          <button id="btnTheme" class="btn btn-soft" aria-label="Alternar tema">Tema</button>
         </div>
       </header>
 
@@ -44,10 +49,15 @@
             <span id="flags" class="stat-value">—</span>
           </div>
           <div class="stat">
-            <span class="stat-label">Estado</span>
-            <span id="status" class="stat-value">Listo</span>
+            <span class="stat-label">Tiempo</span>
+            <span id="timer" class="stat-value">00:00</span>
           </div>
-          <div class="hint">Click = revelar · Click derecho = bandera</div>
+          <div class="stat">
+            <span class="stat-label">Récord</span>
+            <span id="best" class="stat-value">—</span>
+          </div>
+          <div class="hint">Click = revelar · Click derecho = bandera · H = pista</div>
+          <div id="status" class="status-pill">Listo</div>
         </div>
 
         <div class="board-wrap">
@@ -56,20 +66,20 @@
       </section>
 
       <footer class="footer">
-        <span>Hecho para portfolio. Backend con sesión segura + API JSON.</span>
-        <span class="dot">·</span>
-        <a href="/admin/" class="link">Admin</a>
+        <span>
+          © <span id="year"></span> Todos los derechos reservados • Built with Python & Django • UX/UI Interface • Deployed on Render ®
+        </span>
       </footer>
     </main>
 
     <script>
-      // CSRF helper (Django)
       function getCookie(name) {
         const value = `; ${document.cookie}`;
         const parts = value.split(`; ${name}=`);
         if (parts.length === 2) return parts.pop().split(';').shift();
       }
       const CSRF_TOKEN = getCookie('csrftoken');
+      document.getElementById('year').textContent = new Date().getFullYear();
     </script>
     <script src="{% static 'js/app.js' %}"></script>
   </body>
