@@ -1,6 +1,6 @@
 # Minesweeper
 
-Proyecto de **Buscaminas** hecho con **Python + Django** con UI en **escala de grises**.
+Videojuego web del **Buscaminas** hecho con **Python + Django** con UI en **escala de grises**.
 
 - Backend: Django + sesión (estado de partida) + API JSON.
 - Frontend: grid interactivo (click = revelar, click derecho = bandera).
