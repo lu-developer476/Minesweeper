@@ -1,6 +1,6 @@
-# Buscaminas (Minesweeper) — Django
+# Minesweeper
 
-Proyecto de **Buscaminas** hecho con **Python + Django** para portfolio, con una UI tipo videojuego en **escala de grises**.
+Proyecto de **Buscaminas** hecho con **Python + Django** con UI en **escala de grises**.
 
 - Backend: Django + sesión (estado de partida) + API JSON.
 - Frontend: grid interactivo (click = revelar, click derecho = bandera).
