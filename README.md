@@ -1,5 +1,15 @@
 # Minesweeper
 
+![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-5.x-092E20?style=for-the-badge&logo=django&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![HTML5](https://img.shields.io/badge/HTML5-Markup-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-Styling-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![Gunicorn](https://img.shields.io/badge/Gunicorn-WSGI-499848?style=for-the-badge&logo=gunicorn&logoColor=white)
+![WhiteNoise](https://img.shields.io/badge/WhiteNoise-Static%20Files-444444?style=for-the-badge)
+![Render](https://img.shields.io/badge/Render-Deploy-46E3B7?style=for-the-badge&logo=render&logoColor=black)
+![MIT License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
+
 Videojuego web del **Buscaminas** hecho con **Python + Django** con UI en **escala de grises**.
 
 - Backend: Django + sesión (estado de partida) + API JSON.
@@ -43,6 +53,3 @@ Incluye `render.yaml` listo.
 - `game/views.py`: endpoints JSON + render del template.
 - `templates/game/index.html`: UI.
 - `static/`: CSS/JS.
-
-## Licencia
-MIT (usala sin miedo).
