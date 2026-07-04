@@ -1,12 +1,15 @@
 const boardEl = document.getElementById("board");
 const minesEl = document.getElementById("mines");
 const flagsEl = document.getElementById("flags");
+const remainingEl = document.getElementById("remaining");
+const progressEl = document.getElementById("progress");
 const statusEl = document.getElementById("status");
 const timerEl = document.getElementById("timer");
 const bestEl = document.getElementById("best");
 const difficultyEl = document.getElementById("difficulty");
 const btnNew = document.getElementById("btnNew");
 const btnHint = document.getElementById("btnHint");
+const btnPause = document.getElementById("btnPause");
 const btnTheme = document.getElementById("btnTheme");
 
 let currentState = null;
@@ -14,6 +17,7 @@ let timer = null;
 let elapsedSeconds = 0;
 let hintCell = null;
 let loadingGame = false;
+let paused = false;
 
 function setStatus(text){
   statusEl.textContent = text;
@@ -37,6 +41,7 @@ function renderBestTime(){
 function startTimer(){
   clearInterval(timer);
   timer = setInterval(() => {
+    if(paused) return;
     elapsedSeconds += 1;
     timerEl.textContent = formatTime(elapsedSeconds);
   }, 1000);
@@ -94,6 +99,8 @@ function setLoadingUi(isLoading){
   loadingGame = isLoading;
   btnNew.disabled = isLoading;
   difficultyEl.disabled = isLoading;
+  btnHint.disabled = isLoading;
+  btnPause.disabled = isLoading;
 }
 
 function neighbors(r, c, rows, cols){
@@ -141,10 +148,17 @@ function render(state){
   currentState = state;
   minesEl.textContent = state.mines;
   flagsEl.textContent = state.flaggedCount;
+  remainingEl.textContent = state.remainingMines ?? Math.max(0, state.mines - state.flaggedCount);
+  const safeCells = state.rows * state.cols - state.mines;
+  const progress = safeCells ? Math.round((state.revealedCount / safeCells) * 100) : 0;
+  progressEl.textContent = `${progress}%`;
+  boardEl.classList.toggle("paused", paused);
 
   if(state.over){
     setStatus(state.win ? "Ganaste 🏁" : "Boom 💥");
     stopTimerAndPersistIfNeeded();
+  }else if(paused){
+    setStatus("Pausa activa");
   }else{
     setStatus("En juego");
   }
@@ -158,6 +172,7 @@ function render(state){
       const el = document.createElement("div");
       el.className = "cell";
       el.setAttribute("role", "gridcell");
+      el.setAttribute("aria-label", describeCell(cell));
       el.dataset.r = String(cell.r);
       el.dataset.c = String(cell.c);
 
@@ -178,16 +193,23 @@ function render(state){
 
       el.addEventListener("click", async (ev) => {
         ev.preventDefault();
-        if(currentState?.over) return;
+        if(currentState?.over || paused) return;
         hintCell = null;
         await onReveal(cell.r, cell.c);
       });
 
       el.addEventListener("contextmenu", async (ev) => {
         ev.preventDefault();
-        if(currentState?.over) return;
+        if(currentState?.over || paused) return;
         hintCell = null;
         await onToggleFlag(cell.r, cell.c);
+      });
+
+      el.addEventListener("dblclick", async (ev) => {
+        ev.preventDefault();
+        if(currentState?.over || paused || !cell.revealed || cell.mine) return;
+        hintCell = null;
+        await onReveal(cell.r, cell.c);
       });
 
       boardEl.appendChild(el);
@@ -203,6 +225,8 @@ async function newGame(){
   timerEl.textContent = "00:00";
   clearInterval(timer);
   hintCell = null;
+  paused = false;
+  btnPause.textContent = "Pausar";
   renderBestTime();
   try{
     const json = await apiPost("/api/new", { difficulty: difficultyEl.value });
@@ -239,7 +263,28 @@ function toggleTheme(){
   localStorage.setItem("theme", next);
 }
 
+function describeCell(cell){
+  const row = cell.r + 1;
+  const col = cell.c + 1;
+  if(cell.revealed && cell.mine) return `Mina en fila ${row}, columna ${col}`;
+  if(cell.revealed) return cell.count ? `Celda revelada con ${cell.count} minas cerca en fila ${row}, columna ${col}` : `Celda vacía revelada en fila ${row}, columna ${col}`;
+  if(cell.flagged) return `Bandera en fila ${row}, columna ${col}`;
+  return `Celda oculta en fila ${row}, columna ${col}`;
+}
+
+function togglePause(){
+  if(!currentState || currentState.over) return;
+  paused = !paused;
+  btnPause.textContent = paused ? "Reanudar" : "Pausar";
+  setStatus(paused ? "Pausa activa" : "En juego");
+  render(currentState);
+}
+
 function askHint(){
+  if(paused){
+    setStatus("Reanudá la partida para pedir una pista.");
+    return;
+  }
   if(!currentState){
     setStatus("La pista IA necesita una partida activa.");
     return;
@@ -257,6 +302,7 @@ function askHint(){
 
 btnNew.addEventListener("click", () => { newGame().catch((err) => setStatus(err.message)); });
 btnHint.addEventListener("click", () => askHint());
+btnPause.addEventListener("click", () => togglePause());
 btnTheme.addEventListener("click", () => toggleTheme());
 difficultyEl.addEventListener("change", () => { newGame().catch((err) => setStatus(err.message)); });
 
@@ -267,6 +313,7 @@ window.addEventListener("resize", () => {
 window.addEventListener("keydown", (ev) => {
   if(ev.key.toLowerCase() === "h") askHint();
   if(ev.key.toLowerCase() === "n") newGame().catch((err) => setStatus(err.message));
+  if(ev.key.toLowerCase() === "p") togglePause();
   if(ev.key.toLowerCase() === "t") toggleTheme();
 });
 

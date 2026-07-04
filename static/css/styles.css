@@ -114,3 +114,8 @@ h1{margin:0;font-size:22px}
   .shell{padding:14px}
   .panel{border-radius:22px}
 }
+
+.board.paused{position:relative;filter:blur(2px) grayscale(.25)}
+.board.paused:after{content:"Pausa";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:14px;background:rgba(0,0,0,.45);color:#fff;font-weight:900;font-size:clamp(28px,6vw,64px);letter-spacing:.08em;text-transform:uppercase;text-shadow:0 2px 14px rgba(0,0,0,.45)}
+.cell.mine{color:#7b1111}
+.cell.flagged.revealed{background:#f2d1d1;color:#7b1111}
