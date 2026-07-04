@@ -34,6 +34,7 @@
 
           <button id="btnNew" class="btn">Nueva partida</button>
           <button id="btnHint" class="btn btn-soft">Pista IA</button>
+          <button id="btnPause" class="btn btn-soft">Pausar</button>
           <button id="btnTheme" class="btn btn-soft" aria-label="Alternar tema">Tema</button>
         </div>
       </header>
@@ -49,6 +50,14 @@
             <span id="flags" class="stat-value">—</span>
           </div>
           <div class="stat">
+            <span class="stat-label">Restantes</span>
+            <span id="remaining" class="stat-value">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Progreso</span>
+            <span id="progress" class="stat-value">0%</span>
+          </div>
+          <div class="stat">
             <span class="stat-label">Tiempo</span>
             <span id="timer" class="stat-value">00:00</span>
           </div>
@@ -56,12 +65,12 @@
             <span class="stat-label">Récord</span>
             <span id="best" class="stat-value">—</span>
           </div>
-          <div class="hint">Click = revelar · Click derecho = bandera · H = pista</div>
+          <div class="hint">Click = revelar · Click derecho = bandera · doble click en número = abrir alrededor · H = pista · N = nueva · P = pausar</div>
           <div id="status" class="status-pill">Listo</div>
         </div>
 
         <div class="board-wrap">
-          <div id="board" class="board" role="grid" aria-label="Tablero de buscaminas"></div>
+          <div id="board" class="board" role="grid" aria-label="Tablero de buscaminas" tabindex="0"></div>
         </div>
       </section>
 
