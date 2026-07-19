@@ -60,13 +60,19 @@ function stopTimerAndPersistIfNeeded(){
 }
 
 function fitBoardToViewport(state){
-  const horizontalBudget = Math.max(260, window.innerWidth - 34);
-  const verticalBudget = Math.max(220, window.innerHeight - 255);
-  const maxByWidth = Math.floor((horizontalBudget - 16) / state.cols) - 4;
-  const maxByHeight = Math.floor((verticalBudget - 16) / state.rows) - 4;
-  const ideal = Math.min(30, maxByWidth, maxByHeight);
-  const cellSize = Math.max(14, ideal);
+  const wrapper = boardEl.parentElement;
+  const wrapperRect = wrapper?.getBoundingClientRect();
+  const horizontalBudget = Math.max(260, Math.floor(wrapperRect?.width || window.innerWidth - 34));
+  const verticalBudget = Math.max(220, Math.floor(wrapperRect?.height || window.innerHeight - 255));
+  const gap = window.innerWidth <= 420 ? 3 : 4;
+  const boardPadding = 14;
+  const maxByWidth = Math.floor((horizontalBudget - boardPadding - (state.cols - 1) * gap) / state.cols);
+  const maxByHeight = Math.floor((verticalBudget - boardPadding - (state.rows - 1) * gap) / state.rows);
+  const desktopCap = window.innerWidth >= 1200 ? 32 : 30;
+  const ideal = Math.min(desktopCap, maxByWidth, maxByHeight);
+  const cellSize = Math.max(window.innerWidth <= 420 ? 13 : 14, ideal);
   document.documentElement.style.setProperty("--cell-size", `${cellSize}px`);
+  document.documentElement.style.setProperty("--cell-gap", `${gap}px`);
 }
 
 async function apiPost(url, data){
@@ -191,8 +197,13 @@ function render(state){
         el.innerHTML = '<span class="tiny">⚑</span>';
       }
 
+      let suppressNextClick = false;
       el.addEventListener("click", async (ev) => {
         ev.preventDefault();
+        if(suppressNextClick){
+          suppressNextClick = false;
+          return;
+        }
         if(currentState?.over || paused) return;
         hintCell = null;
         await onReveal(cell.r, cell.c);
@@ -204,6 +215,20 @@ function render(state){
         hintCell = null;
         await onToggleFlag(cell.r, cell.c);
       });
+
+      let longPressTimer = null;
+      el.addEventListener("pointerdown", (ev) => {
+        if(ev.pointerType === "mouse" || currentState?.over || paused) return;
+        longPressTimer = setTimeout(async () => {
+          hintCell = null;
+          suppressNextClick = true;
+          await onToggleFlag(cell.r, cell.c);
+          longPressTimer = null;
+        }, 520);
+      });
+      el.addEventListener("pointerup", () => clearTimeout(longPressTimer));
+      el.addEventListener("pointercancel", () => clearTimeout(longPressTimer));
+      el.addEventListener("pointerleave", () => clearTimeout(longPressTimer));
 
       el.addEventListener("dblclick", async (ev) => {
         ev.preventDefault();
